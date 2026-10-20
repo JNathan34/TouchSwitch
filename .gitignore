@@ -1,0 +1,20 @@
+# Compiled Windows applications, installers and icon resources
+*.exe
+*.syso
+*.dll
+*.pdb
+
+# Python cache and development clutter
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Generated installer payload; created during build
+installer/payload/*.exe
+
+# Local outputs
+build/
+dist/
