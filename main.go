@@ -278,6 +278,17 @@ func ptr[T any](x *T) uintptr   { return uintptr(unsafe.Pointer(x)) }
 func main() {
 	runtime.LockOSThread()
 	config = loadSettings()
+	// These installer/settings helper commands configure the task, report their
+	// result, then exit without creating a tray icon or touching hardware.
+	startupAction := ""
+	for _, arg := range os.Args[1:] {
+		if arg == "--enable-startup-task" {
+			startupAction = "enable"
+		}
+		if arg == "--disable-startup-task" {
+			startupAction = "disable"
+		}
+	}
 	// The existing working PnP implementation runs elevated once per launch.
 	if !previewMode() {
 		if r, _, _ := isUserAnAdmin.Call(); r == 0 {
@@ -292,6 +303,19 @@ func main() {
 			}
 			return
 		}
+	}
+	if startupAction != "" {
+		err := setWindowsStartup(startupAction == "enable")
+		if err != nil {
+			messageBox.Call(0, ptr(utf(err.Error())), ptr(utf("TouchSwitch startup setup failed")), 0x10)
+			os.Exit(1)
+		}
+		// Settings toggles are performed inside the app itself. Only show a
+		// confirmation when setup/uninstall invokes this helper mode.
+		if startupAction == "enable" {
+			messageBox.Call(0, ptr(utf("Prompt-free startup is enabled.\n\nTouchSwitch will start elevated when you sign in, without another UAC popup.")), ptr(utf("TouchSwitch")), 0x40)
+		}
+		return
 	}
 	mutex, _, mutexError := createMutex.Call(0, 0, ptr(utf(`Local\TouchSwitch.SingleInstance.2026`)))
 	if mutex != 0 {

@@ -1,33 +1,23 @@
-# TouchSwitch v3.4 build guide
+# TouchSwitch v3.5 build instructions
 
-Requires Go 1.23+ and Python 3. Runs on Linux or Windows cross-compiling to Windows.
+Requires Go 1.23+ and Python 3. No third-party Go dependencies.
 
-Native ARM64 app:
+Build per architecture, regenerating the icon resource before each build:
 
 ```sh
 python resource_icon.py arm64
 GOOS=windows GOARCH=arm64 CGO_ENABLED=0 go build -ldflags='-H=windowsgui -s -w' -o TouchSwitch-ARM64.exe .
-```
-
-Then build the self-contained ARM64 installer:
-
-```sh
 cp TouchSwitch-ARM64.exe installer/payload/TouchSwitch.exe
 cp rsrc.syso installer/rsrc.syso
-cd installer
-GOOS=windows GOARCH=arm64 CGO_ENABLED=0 go build -ldflags='-H=windowsgui -s -w' -o TouchSwitch_Setup_ARM64.exe .
+(cd installer && GOOS=windows GOARCH=arm64 CGO_ENABLED=0 go build -ldflags='-H=windowsgui -s -w' -o ../TouchSwitch_Setup_ARM64_v3.5.exe .)
+
+python resource_icon.py amd64
+GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -ldflags='-H=windowsgui -s -w' -o TouchSwitch-x64.exe .
+cp TouchSwitch-x64.exe installer/payload/TouchSwitch.exe
+cp rsrc.syso installer/rsrc.syso
+(cd installer && GOOS=windows GOARCH=amd64 CGO_ENABLED=0 go build -ldflags='-H=windowsgui -s -w' -o ../TouchSwitch_Setup_x64_v3.5.exe .)
 ```
 
-For x64 replace `arm64` with `amd64` for the Go build variables and
-`resource_icon.py` argument. Both the app and setup require matching icon
-resources, and the app must be copied into `installer/payload` before building.
+The installer writes to `%LOCALAPPDATA%\\Programs\\TouchSwitch` and adds a Start menu shortcut and uninstall registration. When a user opts into prompt-free startup, installer invokes the installed app in elevated helper mode to create a Windows Task Scheduler logon task (`TouchSwitch Startup`) for the current signed-in administrative user. The startup task launches the installed exe with `-startup`. App Settings can remove the task; uninstall also attempts to remove it before deleting the app.
 
-The `.exe` setup installs to `%LOCALAPPDATA%\\Programs\\TouchSwitch`, creates a
-Start menu `.lnk` via the built-in Windows PowerShell COM shortcut facility,
-and writes HKCU uninstall registry keys. It stores an uninstaller in the app
-folder and offers launch upon completion. No installer elevation is needed.
-The app itself requests elevation on launch because Windows requires it for
-PnP device enable/disable.
-
-The app uses the standard Windows 11 Segoe Fluent Icons font and GDI+.
-No third-party libraries, font files, or bundled Windows DLLs are needed.
+The installer and UAC/Task Scheduler behaviour require real-world Windows testing; cross-compilation checks do not validate task registration at runtime.

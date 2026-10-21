@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"strings"
 	"syscall"
-	"unsafe"
 )
 
 type appSettings struct {
@@ -15,6 +14,7 @@ type appSettings struct {
 	Modifiers        uint32 `json:"modifiers"`
 	Key              uint32 `json:"key"`
 	StartWithWindows bool   `json:"start_with_windows"`
+	StartupMode      string `json:"startup_mode,omitempty"`
 	CloseToTray      bool   `json:"close_to_tray"`
 }
 
@@ -199,7 +199,8 @@ var (
 	regCloseKey    = advapi32.NewProc("RegCloseKey")
 )
 
-func setWindowsStartup(enabled bool) error {
+// Removes the older HKCU Run entry so the task never causes duplicate launches.
+func removeLegacyStartup() error {
 	const hkcu = uintptr(0x80000001)
 	var key uintptr
 	r, _, _ := regCreateKeyEx.Call(hkcu, ptr(utf(`Software\Microsoft\Windows\CurrentVersion\Run`)), 0, 0, 0, 0x2, 0, ptr(&key), 0)
@@ -207,21 +208,9 @@ func setWindowsStartup(enabled bool) error {
 		return fmt.Errorf("couldn't open Windows startup settings (%d)", r)
 	}
 	defer regCloseKey.Call(key)
-	if !enabled {
-		r, _, _ = regDeleteValue.Call(key, ptr(utf("TouchSwitch")))
-		if r != 0 && r != 2 {
-			return fmt.Errorf("couldn't remove startup entry (%d)", r)
-		}
-		return nil
-	}
-	exe, e := os.Executable()
-	if e != nil {
-		return e
-	}
-	data := syscall.StringToUTF16(fmt.Sprintf("\"%s\" -startup", exe))
-	r, _, _ = regSetValueEx.Call(key, ptr(utf("TouchSwitch")), 0, 1, uintptr(unsafe.Pointer(&data[0])), uintptr(len(data)*2))
-	if r != 0 {
-		return fmt.Errorf("couldn't add startup entry (%d)", r)
+	r, _, _ = regDeleteValue.Call(key, ptr(utf("TouchSwitch")))
+	if r != 0 && r != 2 {
+		return fmt.Errorf("couldn't remove older startup entry (%d)", r)
 	}
 	return nil
 }

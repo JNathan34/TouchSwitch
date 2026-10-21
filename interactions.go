@@ -51,7 +51,7 @@ type trackMouseEventData struct {
 
 func initHoverAnimation() {
 	themeSlideAmount = themeIndex(config.Theme)
-	if config.StartWithWindows {
+	if promptFreeStartupEnabled() {
 		startupAmount = 1
 	}
 	if config.CloseToTray {
@@ -162,7 +162,7 @@ func tickHoverAnimation() {
 		a    *float64
 		want bool
 	}{
-		{&startupAmount, config.StartWithWindows},
+		{&startupAmount, promptFreeStartupEnabled()},
 		{&trayOptionAmount, config.CloseToTray},
 	} {
 		target := 0.0

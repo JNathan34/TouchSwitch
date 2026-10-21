@@ -4,73 +4,54 @@
 
 # TouchSwitch
 
-**A lightweight, native touchscreen toggle for Windows 11.**
+**A lightweight native touchscreen toggle for Windows 11.**
 
-Switch touch input on or off in seconds — from the system tray, with a keyboard shortcut, or through a clean Windows 11-style interface.
-
-**Windows 11** · **ARM64 & x64** · **Free & open source**
+Windows 11 · ARM64 & x64 · Free and open source
 
 </div>
 
+TouchSwitch quickly enables or disables your touchscreen from the system tray, a configurable keyboard shortcut, or a small Windows 11-style window.
+
 ## Features
 
-- **One-click control:** Left-click the system tray icon to enable or disable the touchscreen.
-- **Customisable global shortcut:** Use `Ctrl + Alt + T` by default, or record your own key combination.
-- **Windows 11-inspired design:** Fluent-style icons, responsive hover effects, subtle animations and rounded controls.
-- **Light, dark or system theme:** Follows your Windows accent colour; dark theme uses `#191919`.
-- **Quick status notifications:** A small animated on/off popup slides in from the right, then disappears after about one second. Because it is drawn by TouchSwitch itself, it can appear while Windows Do Not Disturb is enabled.
-- **Runs from the tray:** Right-click for Open, Settings and Exit.
-- **Convenient installer:** Adds a Start menu shortcut and an entry under Installed apps.
-- **Native Windows builds:** ARM64 for devices such as the Samsung Galaxy Book4 Edge, plus x64 for conventional Windows PCs.
+- Left-click the tray icon to toggle touch immediately.
+- Global shortcut: **Ctrl + Alt + T** by default; choose your own in Settings.
+- Windows 11-inspired icons, accent colour, animated switches, and light/dark/system themes.
+- Quick animated status notification visible even with Windows Do Not Disturb enabled.
+- **Optional prompt-free startup (v3.5):** Registers a Windows Task Scheduler logon task for your signed-in administrator account. Grant UAC permission **once** when enabling it, then TouchSwitch can start elevated without prompting at each sign-in.
+- Start menu shortcut, installer, and Windows Installed apps uninstall entry.
+- Native ARM64 for Snapdragon Windows laptops and x64 for Intel/AMD devices.
 
-## Download and install
+## Install
 
-1. Open this repository's **Releases** section and choose the latest version.
-2. Download the installer for your device:
-   - `TouchSwitch_Setup_ARM64_v3.4.exe` — Windows ARM64 (including Snapdragon-powered laptops).
-   - `TouchSwitch_Setup_x64_v3.4.exe` — Windows x64 (Intel / AMD).
-3. Exit any older TouchSwitch instance from the system tray.
-4. Run the installer, then launch **TouchSwitch** from the Start menu.
-5. Accept the Windows administrator prompt when TouchSwitch starts. Windows requires elevated permission to enable and disable hardware devices.
+1. Download the ARM64 or x64 setup executable from **Releases**.
+2. Exit any previous TouchSwitch instance using **right-click tray icon → Exit**.
+3. Run setup; your settings are preserved during upgrades.
+4. When asked **Enable prompt-free startup?**, choose **Yes** to register the logon task. Windows will ask for administrator approval once.
+5. Alternatively open **Settings → Prompt-free startup** to enable/disable it later.
 
-> **Unsigned software:** These builds are not code-signed. Windows may show an unknown-publisher / SmartScreen warning. Download only from a repository or release you trust.
+With prompt-free startup enabled, the scheduled task starts the app when **you sign in**, rather than via the older registry Run entry. This does **not** disable Windows UAC globally. Opening the executable directly from Start may still request UAC; the prompt-free benefit applies to automatic sign-in startup.
 
-## Using TouchSwitch
+If you use a standard account rather than an administrator account, this method may not be supported; accepting elevation using a different administrator's credentials is intentionally rejected for task creation. Prompt-free startup requires the installed version, not a portable executable.
 
-| Action | How |
-| --- | --- |
-| Toggle touchscreen | **Left-click** the tray icon |
-| Toggle with keyboard | Press `Ctrl + Alt + T` (configurable) |
-| Open app or settings | **Right-click** the tray icon |
-| Toggle from main window | Click the large central button |
-| Change theme | Settings → **System / Light / Dark** |
-| Start automatically | Enable **Start with Windows** in Settings |
-| Uninstall | Windows Settings → Apps → Installed apps → TouchSwitch |
-
-Preferences such as the theme and shortcut are saved locally and retained after uninstalling, so they can be restored if you reinstall the app.
+**Security note:** The scheduled task runs TouchSwitch with elevated permissions. Enabling it first copies the executable to an administrator-protected folder under `Program Files`, and the scheduled task launches that protected copy, rather than the user-writable app file. Future updates to that protected copy require administrator approval once per update. Only install builds you trust.
 
 ## Requirements
 
-- Windows 11 on **ARM64** or **x64**.
-- A Windows-recognised **HID touchscreen** device.
-- Administrator permission when using the application to control the device.
+- Windows 11 ARM64 or x64
+- HID-compliant touchscreen
+- An administrator account for elevated device control and prompt-free startup
 
-TouchSwitch is designed to target the touchscreen rather than the touchpad. Compatibility with every touchscreen controller has **not** been verified; test it on your device. You can also re-enable a touchscreen manually through Windows Device Manager if needed.
+## Uninstall
 
-## Building from source
+Use **Windows Settings → Apps → Installed apps → TouchSwitch → Uninstall**. If prompt-free startup is enabled or a protected copy remains, uninstall requests administrator approval to remove the scheduled task and protected copy before removing the application. Theme and shortcut settings remain for future reinstalls.
 
-The application is written in **Go** and uses Windows APIs. It does not need a browser, cloud account, or third-party runtime. Build instructions for both the app and installer are in [BUILD.md](BUILD.md).
+## Build
 
-You'll need Go 1.23+ and Python 3 to generate the appropriate Windows executable icon resources. If you want to **regenerate the icon artwork**, the `make_icons.py` script additionally requires Pillow and CairoSVG.
-
-## Privacy
-
-The app operates locally to change the touchscreen device state and save its own preferences. It does not require an account or network connection.
+The Go project has no external Go dependencies. See [BUILD.md](BUILD.md) for cross-compilation and installer instructions. The bundled project also includes the Go installer. Regenerate icon resources for each target architecture with `python resource_icon.py arm64` or `python resource_icon.py amd64`.
 
 ## Licence
 
-TouchSwitch is released under the [MIT License](LICENSE).
+MIT — see [LICENSE](LICENSE).
 
----
-
-<sub>TouchSwitch v3.4.0 · Developed for Windows 11 · ARM64 and x64</sub>
+> Unsigned binary: SmartScreen may warn about an unrecognised publisher. The actual installer and Task Scheduler functionality must be validated on Windows hardware; compilation alone cannot prove that UAC/scheduling behaves correctly.

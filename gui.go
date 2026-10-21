@@ -46,12 +46,11 @@ func handleSettingsClick(x, y int32) {
 		return
 	}
 	if y >= d(278) && y <= d(329) {
-		enabled := !config.StartWithWindows
+		enabled := !promptFreeStartupEnabled()
 		if err := setWindowsStartup(enabled); err != nil {
-			showNotice("Couldn't update startup: "+err.Error(), true)
+			showNotice("Startup setup failed", true)
+			messageBox.Call(hwnd, ptr(utf("Couldn't change prompt-free startup.\n\n"+err.Error())), ptr(utf("TouchSwitch")), 0x30)
 		} else {
-			config.StartWithWindows = enabled
-			saveSettings()
 			notice = ""
 			startHoverTimer()
 		}
@@ -220,7 +219,8 @@ func drawSettings(dc uintptr) {
 		bg := hoverMix(colors.background, controlStartup, .065)
 		fillRounded(dc, d(17), d(275), d(334), d(328), d(10), bg, bg)
 	}
-	drawString(dc, "Start with Windows", fontSub, colors.foreground, d(20), d(282), d(260), d(309))
+	drawString(dc, "Prompt-free startup", fontSub, colors.foreground, d(20), d(278), d(258), d(302))
+	drawString(dc, "Start elevated without UAC at sign-in", fontTiny, colors.muted, d(20), d(299), d(273), d(322))
 	drawSwitchAnimated(dc, d(284), d(287), startupAmount, controlStartup)
 	drawLine(dc, d(18), d(330), d(334), d(330), colors.stroke, d(1))
 	if hoverValue(controlTrayOption) > 0.005 {
